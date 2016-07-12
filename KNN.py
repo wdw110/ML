@@ -1,7 +1,6 @@
 #encoding=utf-8
 
 import os
-import path
 import math
 import pandas
 import numpy as np 
@@ -27,7 +26,7 @@ class KNN(object):
 			arr = i.strip().split('\t')
 			tmp.append(arr)
 		if tp=='train': train_data = tmp
-		else if: tp=='test': test_data = tmp
+		elif tp=='test': test_data = tmp
 
 	def classify(self,k=3):
 		d1 = np.array(train_data)
