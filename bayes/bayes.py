@@ -32,19 +32,32 @@ class Bayes(object):
 		self.result = []
 
 	def save(self, fname):
-		
+		pass
 
-	def load(self, fname):#fname文本的数据结构：每行为一个样本，最后一列为类别，
+	def load(self, fname):      #fname文本的数据结构：每行为一个样本，最后一列为类别，
 		f = open(fname,'r')		#第一行为样本属性的连续性：连续：0，离散：1
+		for i in f.readlines():
+			arr = i.strip().split('\t')
+			label = arr[-1]
+			del arr[-1]  #此时arr数组中只有样本的属性值，去掉了标签
+			for j in arr:
+				if not self.d.has_key(j):
+					self.d[j] = {}
+				self.d[j][label] = self.d[j].get(label,0) + 1
+				self.d[j]['total'] = self.d[j].get('total',0) + 1
+			self.total += 1
 
 
 	def train(self, data):
-		
+		pass
 
 	def prob(self, row):
-		
+		pass
 
 	def classifty(self, x):
-		
-		
+		pass
 
+if __name__ == '__main__':
+	bayes = Bayes()
+	bayes.load('data.txt')
+	print bayes.d
