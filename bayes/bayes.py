@@ -1,4 +1,6 @@
 #encoding=utf-8
+from __future__ import division
+import numpy as np 
 
 ######################################
 #贝叶斯定理：P(A|B) = P(B|A) P(A) / P(B)
@@ -25,17 +27,24 @@ rain	mild	high	true	no'''
 class Bayes(object):
 
 	def __init__(self):
-		self.data = []
+		self.d = {}
+		self.total = 0
+		self.result = []
 
 	def save(self, fname):
-		pass
+		
+
 	def load(self, fname):#fname文本的数据结构：每行为一个样本，最后一列为类别，
-		pass				  #第一行为样本属性的连续性：连续：0，离散：1
+		f = open(fname,'r')		#第一行为样本属性的连续性：连续：0，离散：1
+
 
 	def train(self, data):
-		pass
+		
+
 	def prob(self, row):
-		pass
+		
+
 	def classifty(self, x):
-		pass
+		
+		
 
