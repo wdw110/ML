@@ -29,6 +29,7 @@ class Bayes(object):
 	def __init__(self):
 		self.d = {}
 		self.total = 0
+		self.classLabelVector = []
 		self.result = []
 
 	def save(self, fname):
@@ -36,9 +37,22 @@ class Bayes(object):
 
 	def load(self, fname):      #fname文本的数据结构：每行为一个样本，最后一列为类别，
 		f = open(fname,'r')		#第一行为样本属性的连续性：连续：0，离散：1
-		for i in f.readlines():
-			arr = i.strip().split('\t')
-			label = arr[-1]
+		arrayOLines = f.readlines()
+		numberOfLines = len(arrayOLines)
+		row = len(arrayOLines[0])
+		self.Mat = np.zeros((numberOfLines,row))
+		index = 0
+		for line in arrayOLines:
+			arr = line.strip().split('\t')
+			self.Mat[index,:] = arr[0:-1]
+			self.classLabelVector.append(arr[-1])
+			index += 1
+		m,n = self.Mat.shape
+		for i in range(m):
+			
+
+
+
 			del arr[-1]  #此时arr数组中只有样本的属性值，去掉了标签
 			for j in arr:
 				if not self.d.has_key(j):
@@ -46,6 +60,7 @@ class Bayes(object):
 				self.d[j][label] = self.d[j].get(label,0) + 1
 				self.d[j]['total'] = self.d[j].get('total',0) + 1
 			self.total += 1
+
 
 
 	def train(self, data):
@@ -56,6 +71,8 @@ class Bayes(object):
 
 	def classifty(self, x):
 		pass
+
+
 
 if __name__ == '__main__':
 	bayes = Bayes()
