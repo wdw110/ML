@@ -26,7 +26,7 @@ def print_dptable(V):
 	for y in V[0].keys():
 		print '%.5s:' % y,
 		for t in range(len(V)):
-			print '%.7s:' % ('%f' % V[t][y]),
+			print '%.7s' % ('%f' % V[t][y]),
 		print 
 
 def viterbi(obs, states, start_p, trans_p, emit_p):
@@ -36,7 +36,7 @@ def viterbi(obs, states, start_p, trans_p, emit_p):
 	# Initialize base cases (t=0)
 	for y in states:
 		V[0][y] = start_p[y] * emit_p[y][obs[0]]
-		path[y] = y
+		path[y] = [y]
 
 	# Run Viterbi for t>0
 	for t in range(1,len(obs)):
@@ -44,9 +44,9 @@ def viterbi(obs, states, start_p, trans_p, emit_p):
 		newpath = {}
 
 		for y in states:
-			(prob, state) = max([(V[t-1][y0] * trans_p[y0][y] * emit_p[y0][obs[t]], y0) for y0 in states])
+			(prob, state) = max([(V[t-1][y0] * trans_p[y0][y] * emit_p[y][obs[t]], y0) for y0 in states])
 			V[t][y] = prob
-			newpath = path[state] + [y]
+			newpath[y] = path[state] + [y]
 
 		# Don't need to remember the old paths
 		path = newpath
@@ -54,3 +54,8 @@ def viterbi(obs, states, start_p, trans_p, emit_p):
 	print_dptable(V)
 	(prob, state) = max([(V[len(obs)-1][y],y) for y in states])
 	return (prob, path[state])
+
+def example():
+	return viterbi(observations, states, start_probability, transition_probability, emission_probability)
+
+print example()
