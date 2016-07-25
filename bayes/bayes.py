@@ -27,9 +27,8 @@ rain	mild	high	true	no'''
 class Bayes(object):
 
 	def __init__(self):
-		self.d = {}
-		self.total = 0
-		self.classLabelVector = []
+		self.data = []
+		self.Label = []
 		self.result = []
 
 	def save(self, fname):
@@ -39,42 +38,40 @@ class Bayes(object):
 		f = open(fname,'r')		#第一行为样本属性的连续性：连续：0，离散：1
 		arrayOLines = f.readlines()
 		numberOfLines = len(arrayOLines)
-		row = len(arrayOLines[0])
-		self.Mat = np.zeros((numberOfLines,row))
+		col = len(arrayOLines[0].strip().split('\t')) - 1
+		self.Mat = [[0 for c in range(col)] for row in range(numberOfLines)]
 		index = 0
 		for line in arrayOLines:
 			arr = line.strip().split('\t')
-			self.Mat[index,:] = arr[0:-1]
-			self.classLabelVector.append(arr[-1])
+			self.Mat[index] = arr[0:-1]
+			self.Label.append(arr[-1])
 			index += 1
-		m,n = self.Mat.shape
-		for i in range(m):
-			
-
-
-
-			del arr[-1]  #此时arr数组中只有样本的属性值，去掉了标签
-			for j in arr:
-				if not self.d.has_key(j):
-					self.d[j] = {}
-				self.d[j][label] = self.d[j].get(label,0) + 1
-				self.d[j]['total'] = self.d[j].get('total',0) + 1
-			self.total += 1
-
-
-
+		self.Mat = np.array(self.Mat)
+		
 	def train(self, data):
 		pass
 
 	def prob(self, row):
 		pass
 
-	def classifty(self, x):
-		pass
-
+	def classifty(self):
+		row,col = self.Mat.shape
+		label_arr = list(set(self.Label))
+		label_init = np.ones(len(label_arr),dtype=int)
+		label_obj = dict(zip(label_arr,label_init))
+		for i in range(col):
+			self.data.append({})
+			arr = list(zip(self.Mat[:,i],self.Label))
+			for j in range(row):
+				element = arr[j][0]
+				if not self.data[i].get(element):
+					self.data[i][element] = dict(label_obj) # python的变量间赋值是地址引用，故应重新定义 
+				self.data[i][element][arr[j][1]] += 1 
 
 
 if __name__ == '__main__':
 	bayes = Bayes()
 	bayes.load('data.txt')
-	print bayes.d
+	bayes.classifty()
+	print bayes.Mat
+	print bayes.data
