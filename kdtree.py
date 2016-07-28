@@ -120,6 +120,26 @@ def computeDist(pt1, pt2):
     return math.sqrt(sum1)
 
 
+def preorder(root):
+    """
+    KDTree的前序遍历
+    """
+    print root.point
+    if root.left:
+        preorder(root.left)
+    if root.right:
+        preorder(root.right)
+
+def KNN(list1, query):
+    min_dist = 9999.0
+    NN = list1[0]
+    for pt in list1:
+        dist = computeDist(query, pt)
+        if dist < min_dist:
+            NN = pt
+            min_dist = dist
+    return NN, min_dist
+
 
 
 from random import seed, random
