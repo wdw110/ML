@@ -28,6 +28,7 @@ def tf_idf(fname):
 		print k,idf[k]
 	for obj in tf:
 		tmp = {}
+		total = sum(obj.values())
 		for k, v in obj.items():
 			tmp[k] = v * idf[k]
 		tfidf.append(tmp)
@@ -36,3 +37,4 @@ def tf_idf(fname):
 s = [[u'这篇', u'文章'],[u'那篇', u'论文'],[u'这个',u'那篇', u'论文',u'那篇', u'论文'],[u'那篇', u'论文',u'这个']]
 
 tf,idf,tfidf = tf_idf(s)
+print tfidf
