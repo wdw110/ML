@@ -14,3 +14,48 @@ title = [
 "Stock Investing For Dummies",   
 "Rich Dad's Advisors: The ABC's of Real Estate Investing: The Secrets of Finding Hidden Profits Most Investors Miss"   
 ]
+
+stopwords = ['add', 'edition','for','in','little','of','the','to']
+ignorechars = ",:'!"  
+
+class LSA(object):
+	"""docstring for LSA"""
+	def __init__(self, stopwords, ignorechars):
+		self.stopwords = stopwords
+		self.ignorechars = ignorechars
+		self.wdict = {}
+		self.dcount = 0
+
+	def parse(self, doc):
+		words = doc.split()
+		for w in words:
+			w = w.lower().translate(None, self.ignorechars)
+			if w in self.stopwords:
+				continue
+			elif w in self.wdict:
+				self.wdict[w].append(self.dcount)
+			else:
+				self.wdict[w] = [self.dcount]
+		self.dcount += 1
+
+	def build(self):
+		self.keys = [k for k in self.wdict.keys() if len(self.wdict[k]) > 1]
+		self.keys.sort()
+		self.A = zeros([len(self.keys), self.dcount])
+		for i,k in enumerate(self.keys):
+			for d in self.wdict[k]:
+				self.A[i,d] += 1
+
+	def printA(self):
+		print self.A
+
+
+if __name__ == '__main__':
+	mylsa = LSA(stopwords, ignorechars)
+
+	for t in title:
+		mylsa.parse(t)
+
+	mylsa.build()
+	mylsa.printA()
+	
