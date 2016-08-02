@@ -146,30 +146,18 @@ def localWords(feed1,feed0):
 	print 'the error rate is: ',float(errorCount)/len(testSet)
 	return vocabList,p0V,p1V
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+def getTopWords(ny,sf):
+	import operator
+	vocabList,p0V,p1V = localWords(ny,sf)
+	topNY = []; topSF = []
+	for i in range(len(p0V)):
+		if p0V[i] > -6.0: topSF.append((vocabList[i],p0V[i]))
+		if p1V[i] > -6.0: topNY.append((vocabList[i],p1v[i]))
+	sortedSF = sorted(topSF, key=lambda pair: pair[1], reverse=True)
+	print 'SF**'*10
+	for item in sortedSF:
+		print item[0]
+	sortedNY = sorted(topNY, key=lambda pair: pair[1], reverse=True)
+	print 'NY**'*10
+	for item in sortedNY:
+		print item[0]
