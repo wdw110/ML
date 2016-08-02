@@ -93,6 +93,7 @@ def findNN(root, query):
 	##回溯查找
 	while nodeList:
 		#使用list模拟栈，后进先出
+		back_point = nodeList.pop()
 		ss = back_point.split
 		print 'back.point = ', back_point.point
 		##判断是否需要进入父节点的子空间进行搜索
@@ -143,5 +144,4 @@ def KNN(list1, query):
 root = KD_node()
 t = createKDTree(root, data)
 print t.point
-
-	
+print findNN(t,[2,4])
