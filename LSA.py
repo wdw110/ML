@@ -1,5 +1,7 @@
 #encoding=utf-8
 
+#http://blog.sciencenet.cn/blog-995625-812292.html
+
 import numpy
 from scipy.linalg import svd
 import math
