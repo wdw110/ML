@@ -77,6 +77,7 @@ def findNN(root, query):
 	min_dist = computeDist(query, NN)
 	nodeList = []
 	temp_root = root
+
 	##二分查找建立路径
 	while temp_root:
 		nodeList.append(temp_root)
@@ -90,6 +91,7 @@ def findNN(root, query):
 			temp_root = temp_root.left
 		else:
 			temp_root = temp_root.right
+
 	##回溯查找
 	while nodeList:
 		#使用list模拟栈，后进先出
@@ -144,4 +146,4 @@ def KNN(list1, query):
 root = KD_node()
 t = createKDTree(root, data)
 print t.point
-print findNN(t,[2,4])
+print findNN(t,[4,5])
