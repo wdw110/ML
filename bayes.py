@@ -1,5 +1,7 @@
 #encoding=utf-8
 
+#http://www.cnblogs.com/fengfenggirl/p/bayes_classify.html
+
 import random
 import sys
 import math

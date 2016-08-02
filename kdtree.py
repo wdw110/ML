@@ -1,5 +1,7 @@
 #encoding=utf-8
 
+#http://blog.csdn.net/u010551621/article/details/44813299
+
 import math
 import numpy as np
 
