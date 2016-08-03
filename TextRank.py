@@ -1,5 +1,7 @@
 #encoding=utf-8
 
+#http://joshbohde.com/blog/document-summarization
+
 import networkx as nx
 import numpy as np
 
