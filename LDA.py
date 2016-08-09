@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#encoding=utf-8
+
 """
 __title__ = 'topic model - build lda - 20news dataset'
 __author__ = 'pi'
