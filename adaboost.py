@@ -45,6 +45,8 @@ def buildStump(dataArr,classLabels,D):
 					bestStump['ineq'] = inequal
 	return bestStump,minError,bestClassEst
 
+	
+
 
 
 
