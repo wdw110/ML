@@ -39,6 +39,7 @@ class LDAmodel(object):
 		# nwsum,每个topic的词的总数
 		# nd,每个doc中各个topic的词的总数
 		# ndsum,每个doc中词的总数
+		# Z,M*doc.size(), 文档中词的主题分布
 		self.p = np.zeros(self.K)
 		self.nw = np.zeros((self.dpre.words_count,self.K),dtype='int')
 		self.nwsum = np.zeros(self.K,dtype='int')
@@ -46,7 +47,6 @@ class LDAmodel(object):
 		self.ndsum = np.zeros(dpre.docs_count,dtype='int')
 		self.Z = np.array([[0 for y in xrange(dpre.docs[x].length)] for x in xrange(dpre.docs_count)])
 
-		# M*doc.size(), 文档中词的主题分布
 		# 随机起始分配类型
 		for x in xrange(len(self.Z)):
 			self.ndsum[x] = self.dpre.docs[x].length
