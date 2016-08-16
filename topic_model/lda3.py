@@ -1,148 +1,208 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# -*- coding:utf-8 -*-
 
-# Latent Dirichlet Allocation + collapsed Gibbs sampling
-# This code is available under the MIT License.
-# (c)2010-2011 Nakatani Shuyo / Cybozu Labs Inc.
-# https://github.com/shuyo/iir/blob/master/lda/lda.py
+#https://github.com/yimiwawa/pyLDA/blob/master/lda.py
 
-import numpy
+import random,os
 
-class LDA:
-    def __init__(self, K, alpha, beta, docs, V, smartinit=True):
+alpha = 0.1
+beta = 0.1
+K = 10
+iter_num = 50
+top_words = 20
+
+wordmapfile  = './model/wordmap.txt'
+trnfile = "./model/test.dat"
+modelfile_suffix = "./model/final"
+
+class Document(object):
+    def __init__(self):
+        self.words = []
+        self.length = 0
+
+class Dataset(object):
+    def __init__(self):
+        self.M = 0
+        self.V = 0
+        self.docs = []
+        self.word2id = {}    # <string,int>字典
+        self.id2word = {}    # <int, string>字典
+
+    def writewordmap(self):
+        with open(wordmapfile, 'w') as f:
+            for k,v in self.word2id.items():
+                f.write(k + '\t' + str(v) + '\n')
+
+class Model(object):
+    def __init__(self, dset):
+        self.dset = dset
+
         self.K = K
-        self.alpha = alpha # parameter of topics prior
-        self.beta = beta   # parameter of words prior
-        self.docs = docs
-        self.V = V
+        self.alpha = alpha
+        self.beta = beta
+        self.iter_num = iter_num
+        self.top_words = top_words
 
-        self.z_m_n = [] # topics of words of documents
-        self.n_m_z = numpy.zeros((len(self.docs), K)) + alpha     # word count of each document and topic
-        self.n_z_t = numpy.zeros((K, V)) + beta # word count of each topic and vocabulary
-        self.n_z = numpy.zeros(K) + V * beta    # word count of each topic
+        self.wordmapfile = wordmapfile
+        self.trnfile = trnfile
+        self.modelfile_suffix = modelfile_suffix
 
-        self.N = 0
-        for m, doc in enumerate(docs):
-            self.N += len(doc)
-            z_n = []
-            for t in doc:
-                if smartinit:
-                    p_z = self.n_z_t[:, t] * self.n_m_z[m] / self.n_z
-                    z = numpy.random.multinomial(1, p_z / p_z.sum()).argmax()
-                else:
-                    z = numpy.random.randint(0, K)
-                z_n.append(z)
-                self.n_m_z[m, z] += 1
-                self.n_z_t[z, t] += 1
-                self.n_z[z] += 1
-            self.z_m_n.append(numpy.array(z_n))
+        self.p = []        # double类型，存储采样的临时变量
+        self.Z = []        # M*doc.size()，文档中词的主题分布
+        self.nw = []       # V*K，词i在主题j上的分布
+        self.nwsum = []    # K，属于主题i的总词数
+        self.nd = []       # M*K，文章i属于主题j的词个数
+        self.ndsum = []    # M，文章i的词个数
+        self.theta = []    # 文档-主题分布
+        self.phi = []      # 主题-词分布
 
-    def inference(self):
-        """learning once iteration"""
-        for m, doc in enumerate(self.docs):
-            z_n = self.z_m_n[m]
-            n_m_z = self.n_m_z[m]
-            for n, t in enumerate(doc):
-                # discount for n-th word t with topic z
-                z = z_n[n]
-                n_m_z[z] -= 1
-                self.n_z_t[z, t] -= 1
-                self.n_z[z] -= 1
+    def init_est(self):
+        self.p = [0.0 for x in xrange(self.K)]
+        self.nw = [ [0 for y in xrange(self.K)] for x in xrange(self.dset.V) ]
+        self.nwsum = [ 0 for x in xrange(self.K)]
+        self.nd = [ [ 0 for y in xrange(self.K)] for x in xrange(self.dset.M)]
+        self.ndsum = [ 0 for x in xrange(self.dset.M)]
+        self.Z = [ [] for x in xrange(self.dset.M)]
+        for x in xrange(self.dset.M):
+            self.Z[x] = [0 for y in xrange(self.dset.docs[x].length)]
+            self.ndsum[x] = self.dset.docs[x].length
+            for y in xrange(self.dset.docs[x].length):
+                topic = random.randint(0, self.K-1)
+                self.Z[x][y] = topic
+                self.nw[self.dset.docs[x].words[y]][topic] += 1
+                self.nd[x][topic] += 1
+                self.nwsum[topic] += 1
+        self.theta = [ [0.0 for y in xrange(self.K)] for x in xrange(self.dset.M) ]
+        self.phi = [ [ 0.0 for y in xrange(self.dset.V) ] for x in xrange(self.K)]
 
-                # sampling topic new_z for t
-                p_z = self.n_z_t[:, t] * n_m_z / self.n_z
-                new_z = numpy.random.multinomial(1, p_z / p_z.sum()).argmax()
+    def estimate(self):
+        print 'Sampling %d iterations!' % self.iter_num
+        for x in xrange(self.iter_num):
+            print 'Iteration %d ...' % (x+1)
+            for i in xrange(len(self.dset.docs)):
+                for j in xrange(self.dset.docs[i].length):
+                    topic = self.sampling(i, j)
+                    self.Z[i][j] = topic
+        print 'End sampling.'
+        print 'Compute theta...'
+        self.compute_theta()
+        print 'Compute phi...'
+        self.compute_phi()
+        print 'Saving model...'
+        self.save_model()
 
-                # set z the new topic and increment counters
-                z_n[n] = new_z
-                n_m_z[new_z] += 1
-                self.n_z_t[new_z, t] += 1
-                self.n_z[new_z] += 1
+    def sampling(self, i, j):
+        topic = self.Z[i][j]
+        wid = self.dset.docs[i].words[j]
+        self.nw[wid][topic] -= 1
+        self.nd[i][topic] -= 1
+        self.nwsum[topic] -= 1
+        self.ndsum[i] -= 1
 
-    def worddist(self):
-        """get topic-word distribution"""
-        return self.n_z_t / self.n_z[:, numpy.newaxis]
-
-    def perplexity(self, docs=None):
-        if docs == None: docs = self.docs
-        phi = self.worddist()
-        log_per = 0
-        N = 0
+        Vbeta = self.dset.V * self.beta
         Kalpha = self.K * self.alpha
-        for m, doc in enumerate(docs):
-            theta = self.n_m_z[m] / (len(self.docs[m]) + Kalpha)
-            for w in doc:
-                log_per -= numpy.log(numpy.inner(phi[:,w], theta))
-            N += len(doc)
-        return numpy.exp(log_per / N)
 
-def lda_learning(lda, iteration, voca):
-    pre_perp = lda.perplexity()
-    print ("initial perplexity=%f" % pre_perp)
-    for i in range(iteration):
-        lda.inference()
-        perp = lda.perplexity()
-        print ("-%d p=%f" % (i + 1, perp))
-        if pre_perp:
-            if pre_perp < perp:
-                output_word_topic_dist(lda, voca)
-                pre_perp = None
-            else:
-                pre_perp = perp
-    output_word_topic_dist(lda, voca)
+        for k in xrange(self.K):
+            self.p[k] = (self.nw[wid][k] + self.beta)/(self.nwsum[k] + Vbeta) * \
+                        (self.nd[i][k] + alpha)/(self.ndsum[i] + Kalpha)
+        for k in range(1, self.K):
+            self.p[k] += self.p[k-1]
+        u = random.uniform(0, self.p[self.K-1])
+        for topic in xrange(self.K):
+            if self.p[topic]>u:
+                break
+        self.nw[wid][topic] += 1
+        self.nwsum[topic] += 1
+        self.nd[i][topic] += 1
+        self.ndsum[i] += 1
+        return topic
 
-def output_word_topic_dist(lda, voca):
-    zcount = numpy.zeros(lda.K, dtype=int)
-    wordcount = [dict() for k in range(lda.K)]
-    for xlist, zlist in zip(lda.docs, lda.z_m_n):
-        for x, z in zip(xlist, zlist):
-            zcount[z] += 1
-            if x in wordcount[z]:
-                wordcount[z][x] += 1
-            else:
-                wordcount[z][x] = 1
+    def compute_theta(self):
+        for x in xrange(self.dset.M):
+            for y in xrange(self.K):
+                self.theta[x][y] = (self.nd[x][y] + self.alpha) \
+                                   /(self.ndsum[x] + self.K * self.alpha)
 
-    phi = lda.worddist()
-    for k in range(lda.K):
-        print ("\n-- topic: %d (%d words)" % (k, zcount[k]))
-        for w in numpy.argsort(-phi[k])[:20]:
-            print ("%s: %f (%d)" % (voca[w], phi[k,w], wordcount[k].get(w,0)))
+    def compute_phi(self):
+        for x in xrange(self.K):
+            for y in xrange(self.dset.V):
+                self.phi[x][y] = (self.nw[y][x] + self.beta)\
+                                 /(self.nwsum[x] + self.dset.V * self.beta)
 
-def main():
-    import optparse
-    import vocabulary
-    parser = optparse.OptionParser()
-    parser.add_option("-f", dest="filename", help="corpus filename")
-    parser.add_option("-c", dest="corpus", help="using range of Brown corpus' files(start:end)")
-    parser.add_option("--alpha", dest="alpha", type="float", help="parameter alpha", default=0.5)
-    parser.add_option("--beta", dest="beta", type="float", help="parameter beta", default=0.5)
-    parser.add_option("-k", dest="K", type="int", help="number of topics", default=20)
-    parser.add_option("-i", dest="iteration", type="int", help="iteration count", default=100)
-    parser.add_option("-s", dest="smartinit", action="store_true", help="smart initialize of parameters", default=False)
-    parser.add_option("--stopwords", dest="stopwords", help="exclude stop words", action="store_true", default=False)
-    parser.add_option("--seed", dest="seed", type="int", help="random seed")
-    parser.add_option("--df", dest="df", type="int", help="threshold of document freaquency to cut words", default=0)
-    (options, args) = parser.parse_args()
-    if not (options.filename or options.corpus): parser.error("need corpus filename(-f) or corpus range(-c)")
+    def save_model(self):
+        with open(self.modelfile_suffix+'.theta', 'w') as ftheta:
+            for x in xrange(self.dset.M):
+                for y in xrange(self.K):
+                    ftheta.write(str(self.theta[x][y]) + ' ')
+                ftheta.write('\n')
+        with open(self.modelfile_suffix+'.phi', 'w') as fphi:
+            for x in xrange(self.K):
+                for y in xrange(self.dset.V):
+                    fphi.write(str(self.phi[x][y]) + ' ')
+                fphi.write('\n')
+        with open(self.modelfile_suffix+'.twords','w') as ftwords:
+            if self.top_words > self.dset.V:
+                self.top_words = self.dset.V
+            for x in xrange(self.K):
+                ftwords.write('Topic '+str(x)+'th:\n')
+                topic_words = []
+                for y in xrange(self.dset.V):
+                    topic_words.append((y, self.phi[x][y]))
+                #quick-sort
+                topic_words.sort(key=lambda x:x[1], reverse=True)
+                for y in xrange(self.top_words):
+                    word = self.dset.id2word[topic_words[y][0]]
+                    ftwords.write('\t'+word+'\t'+str(topic_words[y][1])+'\n')
+        with open(self.modelfile_suffix+'.tassign','w') as ftassign:
+            for x in xrange(self.dset.M):
+                for y in xrange(self.dset.docs[x].length):
+                    ftassign.write(str(self.dset.docs[x].words[y])+':'+str(self.Z[x][y])+' ')
+                ftassign.write('\n')
+        with open(self.modelfile_suffix+'.others','w') as fothers:
+            fothers.write('alpha = '+str(self.alpha)+'\n')
+            fothers.write('beta = '+str(self.beta)+'\n')
+            fothers.write('ntopics = '+str(self.K)+'\n')
+            fothers.write('ndocs = '+str(self.dset.M)+'\n')
+            fothers.write('nwords = '+str(self.dset.V)+'\n')
+            fothers.write('liter = '+str(self.iter_num)+'\n')
 
-    if options.filename:
-        corpus = vocabulary.load_file(options.filename)
-    else:
-        corpus = vocabulary.load_corpus(options.corpus)
-        if not corpus: parser.error("corpus range(-c) forms 'start:end'")
-    if options.seed != None:
-        numpy.random.seed(options.seed)
+def readtrnfile():
+    print 'Reading train data...'
+    with open(trnfile, 'r') as f:
+        docs = f.readlines()
 
-    voca = vocabulary.Vocabulary(options.stopwords)
-    docs = [voca.doc_to_ids(doc) for doc in corpus]
-    if options.df > 0: docs = voca.cut_low_freq(docs, options.df)
+    dset = Dataset()
+    items_idx = 0
+    for line in docs:
+        if line != "":
+            tmp = line.strip().split()
+            #生成一个文档对象
+            doc = Document()
+            for item in tmp:
+                if dset.word2id.has_key(item):
+                    doc.words.append(dset.word2id[item])
+                else:
+                    dset.word2id[item] = items_idx
+                    dset.id2word[items_idx] = item
+                    doc.words.append(items_idx)
+                    items_idx += 1
+            doc.length = len(tmp)
+            dset.docs.append(doc)
+        else:
+            pass
+    dset.M = len(dset.docs)
+    dset.V = len(dset.word2id)
+    print 'There are %d documents' % dset.M
+    print 'There are %d items' % dset.V
+    print 'Saving wordmap file...'
+    dset.writewordmap()
+    return dset
 
-    lda = LDA(options.K, options.alpha, options.beta, docs, voca.size(), options.smartinit)
-    print ("corpus=%d, words=%d, K=%d, a=%f, b=%f" % (len(corpus), len(voca.vocas), options.K, options.alpha, options.beta))
+def lda():
+    dset = readtrnfile()
+    model = Model(dset)
+    model.init_est()
+    model.estimate()
 
-    #import cProfile
-    #cProfile.runctx('lda_learning(lda, options.iteration, voca)', globals(), locals(), 'lda.profile')
-    lda_learning(lda, options.iteration, voca)
-
-if __name__ == "__main__":
-    main()
+if __name__=='__main__':
+    lda()
