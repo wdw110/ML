@@ -15,6 +15,11 @@ wordmapfile  = './model/wordmap.txt'
 trnfile = "./model/test.dat"
 modelfile_suffix = "./model/final"
 
+pathlist = os.listdir('./model')
+for i in pathlist:
+	if 'final' in i or 'wordmap' in i:
+		os.remove(os.path.join('./model',i))
+
 class Document(object):
 	def __init__(self):
 		self.words = []
