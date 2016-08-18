@@ -110,7 +110,7 @@ class Model(object):
 		for k in xrange(self.K):
 			self.p[k] = (self.nw[wid][k] + self.beta)/(self.nwsum[k] + Vbeta) * \
 						(self.nd[i][k] + alpha)/(self.ndsum[i] + Kalpha)
-		for k in range(1, self.K):
+		for k in range(1, self.K):  #计算积累概率，利用轮盘赌选择法，选择主题
 			self.p[k] += self.p[k-1]
 		u = random.uniform(0, self.p[self.K-1])
 		for topic in xrange(self.K):
