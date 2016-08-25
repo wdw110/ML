@@ -16,7 +16,8 @@ def sigmoid(inX):
 	return 1.0/(1+exp(-inX))
 
 def gradAscent(dataMatIn, classLabels):
-	dataMatrix = mat(classLabels).transpose()
+	dataMatrix = mat(dataMatIn)
+	labelMat = mat(classLabels).transpose()
 	m,n = shape(dataMatrix)
 	alpha = 0.001
 	maxCycles = 500
@@ -30,7 +31,8 @@ def gradAscent(dataMatIn, classLabels):
 # 画出数据集和Logistic回归最佳拟合直线的函数
 def plotBestFit(wei):
 	import matplotlib.pyplot as plt 
-	weights = wei.getA()
+	#weights = wei.getA()
+	weights = wei
 	dataMat,labelMat = loadDataSet()
 	dataArr = array(dataMat)
 	n = shape(dataArr)[0]
@@ -56,7 +58,7 @@ def stocGradAscent0(dataMatrix, classLabels):
 	m,n = shape(dataMatrix)
 	alpha = 0.01
 	weights = ones(n)
-	for i in reange(m):
+	for i in range(m):
 		h = sigmoid(sum(dataMatrix[i]*weights))
 		error = classLabels[i] - h
 		weights = weights + alpha * error * dataMatrix[i]
@@ -79,7 +81,7 @@ def stocGradAscent1(dataMatrix, classLabels, numIter=150):
 
 # Logistic回归分类函数
 def classifyVector(inX, weights):
-	prob = sigmoid(sum(inx*weights))
+	prob = sigmoid(sum(inX*weights))
 	if prob > 0.5: return 1.0
 	else: return 0.0
 
@@ -112,5 +114,5 @@ def multiTest():
 	numTests = 10; errorSum = 0.0
 	for k in range(numTests):
 		errorSum += colicTest()
-	print 'after %d iterations the average error rate is: %f' (numTests, errorSum/float(numTests))
+	print 'after %d iterations the average error rate is: %f' % (numTests, errorSum/float(numTests))
 
