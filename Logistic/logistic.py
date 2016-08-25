@@ -26,6 +26,7 @@ def gradAscent(dataMatIn, classLabels):
 		h = sigmoid(dataMatrix*weights)
 		error = (labelMat - h)
 		weights = weights + alpha * dataMatrix.transpose() * error
+		weights = array(weights)
 	return weights
 
 # 画出数据集和Logistic回归最佳拟合直线的函数
