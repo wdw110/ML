@@ -66,7 +66,6 @@ def adaBoostTrainDS(dataArr,classLabels,numIt=40):
 		if errorRate == 0.0: break
 	return weakClassArr
 
-
 if __name__ == '__main__':
 	dataMat, classLabels = loadSimpData()
 	#D = np.mat(np.ones((5,1))/5)
