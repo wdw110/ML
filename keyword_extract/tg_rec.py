@@ -16,15 +16,6 @@ def isequal(list1,list2):
 		return True
 	else: return False
 
-	"""
-	if len(list1) == len(list2):
-		for i in list1:
-			if i not in list2:
-				return False
-		return True
-	else: return False
-	"""
-
 #读取源文件
 #文本内容：工单号，用户号，台区号，工单内容
 #改
@@ -64,22 +55,6 @@ for tid in tg_tmp:
 				res[tid][kk].extend([arr[i],arr[j]])
 	for kk in res[tid]:
 		res[tid][kk] = list(set(res[tid][kk]))
-				'''
-				if not tmp:
-					res[tid][kk] = []
-					res[tid][kk].extend([arr[i],arr[j]])
-				else:
-					aa = [isequal(l,kk) for l in tmp]
-					if True in aa:
-						v = res[tid][tmp[aa.index(True)]]
-						if arr[i] not in v:
-							v.append(arr[i])
-						if arr[j] not in v:
-							v.append(arr[j])
-					else:
-						res[tid][kk] = []
-						res[tid][kk].extend([arr[i],arr[j]])
-				'''		
 
 with open('tg_test.txt','w') as f:
 	for tid in res:

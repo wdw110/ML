@@ -43,7 +43,7 @@ def createKDTree(root, data_list):
 			max_var = var
 			split = i
 	#根据划分域的数据对数据点进行排序
-	data.sort(key=lambda x: x[split])
+	data_list.sort(key=lambda x: x[split])
 	#选择下标为len/2的点作为分割点
 	point = data_list[LEN/2]
 	root = KD_node(point, split)
